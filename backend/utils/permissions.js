@@ -1,6 +1,18 @@
 // Permission definitions for each role
 export const PERMISSIONS = {
-    super_admin: ['*'], // All permissions
+    super_admin: ['*'], // All permissions - platform admin
+    company_admin: [
+        'view_all_tickets',
+        'assign_tickets',
+        'view_reports',
+        'manage_all_teams',
+        'create_teams',
+        'manage_users',
+        'create_users',
+        'manage_automations',
+        'create_canned_responses',
+        'view_all_data'
+    ],
     company_manager: [
         'view_all_team_tickets',
         'assign_tickets',

@@ -16,12 +16,12 @@ router.use(protect);
 
 // User management routes
 router.route('/')
-    .get(requireRole(['super_admin', 'company_manager']), getUsers)
-    .post(requireRole(['super_admin']), createUser);
+    .get(requireRole(['super_admin', 'company_admin', 'company_manager']), getUsers)
+    .post(requireRole(['super_admin', 'company_admin']), createUser);
 
 router.route('/:id')
     .get(getUser)
-    .put(requireRole(['super_admin', 'company_manager']), updateUser)
-    .delete(requireRole(['super_admin']), deactivateUser);
+    .put(requireRole(['super_admin', 'company_admin', 'company_manager']), updateUser)
+    .delete(requireRole(['super_admin', 'company_admin']), deactivateUser);
 
 export default router;

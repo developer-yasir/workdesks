@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import AgentDashboard from './pages/agent/AgentDashboard';
 import TicketDetailPage from './pages/agent/TicketDetailPage';
 import ManagerDashboard from './pages/manager/ManagerDashboard';
+import CompanyAdminDashboard from './pages/company-admin/CompanyAdminDashboard';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UsersPage from './pages/admin/UsersPage';
 import './index.css';
@@ -40,6 +41,8 @@ const DashboardRedirect = () => {
     switch (user.role) {
         case 'super_admin':
             return <Navigate to="/admin/dashboard" replace />;
+        case 'company_admin':
+            return <Navigate to="/company-admin/dashboard" replace />;
         case 'company_manager':
             return <Navigate to="/manager/dashboard" replace />;
         case 'agent':

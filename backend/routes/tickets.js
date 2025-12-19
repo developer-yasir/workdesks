@@ -24,10 +24,10 @@ router.route('/')
 router.route('/:id')
     .get(getTicket)
     .put(updateTicket)
-    .delete(requireRole(['super_admin']), deleteTicket);
+    .delete(requireRole(['super_admin', 'company_admin']), deleteTicket);
 
 // Ticket actions
-router.post('/:id/assign', requireRole(['super_admin', 'company_manager']), assignTicket);
+router.post('/:id/assign', requireRole(['super_admin', 'company_admin', 'company_manager']), assignTicket);
 router.post('/:id/reply', addReply);
 
 export default router;
