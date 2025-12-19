@@ -6,24 +6,72 @@ import User from '../models/User.js';
 // @access  Private
 export const createTicket = async (req, res) => {
     try {
+        console.log('=== CREATE TICKET DEBUG ===');
+        console.log('req.body:', req.body);
+        console.log('req.files:', req.files);
+        console.log('req.user:', req.user);
+
         const { requester, subject, description, type, priority, tags } = req.body;
 
-        const ticket = await Ticket.create({
+        // Validate required fields
+        if (!requester || !subject || !description) {
+            return res.status(400).json({
+                message: 'Missing required fields',
+                missing: {
+                    requester: !requester,
+                    subject: !subject,
+                    description: !description
+                }
+            });
+        }
+
+        // Handle file attachments if present
+        const attachments = req.files ? req.files.map(file => ({
+            filename: file.filename,
+            originalName: file.originalname,
+            path: file.path,
+            size: file.size,
+            mimetype: file.mimetype
+        })) : [];
+
+        console.log('Creating ticket with data:', {
             requester,
             subject,
             description,
             type,
             priority,
-            tags: tags || []
+            attachments: attachments.length
         });
+
+        const ticket = await Ticket.create({
+            requester,
+            subject,
+            description,
+            type: type || 'Question',
+            priority: priority || 'Medium',
+            tags: tags ? (Array.isArray(tags) ? tags : [tags]) : [],
+            attachments
+        });
+
+        console.log('Ticket created successfully:', ticket._id);
 
         res.status(201).json({
             success: true,
             ticket
         });
     } catch (error) {
-        console.error('Create ticket error:', error);
-        res.status(500).json({ message: 'Error creating ticket', error: error.message });
+        console.error('=== CREATE TICKET ERROR ===');
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+        if (error.errors) {
+            console.error('Validation errors:', error.errors);
+        }
+        res.status(500).json({
+            message: 'Error creating ticket',
+            error: error.message,
+            details: error.errors || {}
+        });
     }
 };
 
@@ -33,7 +81,7 @@ export const createTicket = async (req, res) => {
 export const getTickets = async (req, res) => {
     try {
         const { role, _id, teamId } = req.user;
-        const { status, priority, assignedTo, page = 1, limit = 20 } = req.query;
+        const { status, priority, type, search, assignedTo, page = 1, limit = 20 } = req.query;
 
         let query = {};
 
@@ -47,13 +95,24 @@ export const getTickets = async (req, res) => {
                 query.teamId = teamId;
             }
         }
-        // Super admins see all tickets (no filter)
+        // Company admins and super admins see all tickets (no filter)
 
         // Apply additional filters
         if (status) query.status = status;
         if (priority) query.priority = priority;
-        if (assignedTo && (role === 'super_admin' || role === 'company_manager')) {
+        if (type) query.type = type;
+        if (assignedTo && (role === 'super_admin' || role === 'company_admin' || role === 'company_manager')) {
             query.assignedTo = assignedTo;
+        }
+
+        // Search functionality
+        if (search) {
+            query.$or = [
+                { ticketNumber: { $regex: search, $options: 'i' } },
+                { subject: { $regex: search, $options: 'i' } },
+                { requester: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } }
+            ];
         }
 
         const skip = (page - 1) * limit;

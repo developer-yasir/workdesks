@@ -1,21 +1,34 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout';
+import CreateTicketModal from '../../components/tickets/CreateTicketModal';
+import TicketFilters from '../../components/tickets/TicketFilters';
 import api from '../../utils/api';
 
 const AgentDashboard = () => {
     const [tickets, setTickets] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState('all');
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [filters, setFilters] = useState({
+        status: '',
+        priority: '',
+        type: '',
+        search: ''
+    });
 
     useEffect(() => {
         fetchTickets();
-    }, [filter]);
+    }, [filters]);
 
     const fetchTickets = async () => {
         try {
             setLoading(true);
-            const params = filter !== 'all' ? { status: filter } : {};
+            const params = {};
+            if (filters.status) params.status = filters.status;
+            if (filters.priority) params.priority = filters.priority;
+            if (filters.type) params.type = filters.type;
+            if (filters.search) params.search = filters.search;
+
             const response = await api.get('/tickets', { params });
             setTickets(response.data.tickets);
         } catch (error) {
@@ -23,6 +36,14 @@ const AgentDashboard = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleFilterChange = (newFilters) => {
+        setFilters(newFilters);
+    };
+
+    const handleTicketCreated = (newTicket) => {
+        setTickets([newTicket, ...tickets]);
     };
 
     const getStatusBadge = (status) => {
@@ -56,9 +77,18 @@ const AgentDashboard = () => {
         <DashboardLayout>
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-900">My Tickets</h1>
-                    <p className="text-gray-600 mt-1">Manage and respond to your assigned tickets</p>
+                <div className="mb-6 flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">My Tickets</h1>
+                        <p className="text-gray-600 mt-1">Manage and respond to your assigned tickets</p>
+                    </div>
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="btn btn-primary flex items-center space-x-2"
+                    >
+                        <span className="text-xl">+</span>
+                        <span>Create Ticket</span>
+                    </button>
                 </div>
 
                 {/* Stats Cards */}
@@ -113,23 +143,7 @@ const AgentDashboard = () => {
                 </div>
 
                 {/* Filters */}
-                <div className="card p-4 mb-6">
-                    <div className="flex items-center space-x-4">
-                        <span className="text-sm font-medium text-gray-700">Filter:</span>
-                        {['all', 'Open', 'Pending', 'Resolved', 'Closed'].map((status) => (
-                            <button
-                                key={status}
-                                onClick={() => setFilter(status)}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === status
-                                        ? 'bg-primary text-white'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                    }`}
-                            >
-                                {status === 'all' ? 'All Tickets' : status}
-                            </button>
-                        ))}
-                    </div>
-                </div>
+                <TicketFilters onFilterChange={handleFilterChange} />
 
                 {/* Tickets Table */}
                 <div className="card overflow-hidden">
@@ -195,6 +209,13 @@ const AgentDashboard = () => {
                         </div>
                     )}
                 </div>
+
+                {/* Create Ticket Modal */}
+                <CreateTicketModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    onTicketCreated={handleTicketCreated}
+                />
             </div>
         </DashboardLayout>
     );

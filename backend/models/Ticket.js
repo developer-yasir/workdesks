@@ -3,8 +3,7 @@ import mongoose from 'mongoose';
 const ticketSchema = new mongoose.Schema({
     ticketNumber: {
         type: String,
-        unique: true,
-        required: true
+        unique: true
     },
     requester: {
         type: String,
@@ -51,6 +50,7 @@ const ticketSchema = new mongoose.Schema({
     }],
     attachments: [{
         filename: String,
+        originalName: String,
         path: String,
         mimetype: String,
         size: Number,
@@ -91,12 +91,11 @@ const ticketSchema = new mongoose.Schema({
 });
 
 // Auto-generate ticket number before saving
-ticketSchema.pre('save', async function (next) {
+ticketSchema.pre('save', async function () {
     if (!this.ticketNumber) {
         const count = await mongoose.model('Ticket').countDocuments();
         this.ticketNumber = `TKT-${String(count + 1).padStart(6, '0')}`;
     }
-    next();
 });
 
 // Indexes for faster queries
