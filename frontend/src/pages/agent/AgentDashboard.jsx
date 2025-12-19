@@ -32,6 +32,15 @@ const AgentDashboard = () => {
         fetchTickets();
     }, [filters]);
 
+    // Auto-refresh every 30 seconds
+    useEffect(() => {
+        const interval = setInterval(() => {
+            fetchTickets();
+        }, 30000); // 30 seconds
+
+        return () => clearInterval(interval);
+    }, [filters]);
+
     const fetchTickets = async () => {
         try {
             setLoading(true);

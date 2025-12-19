@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+import toast from 'react-hot-toast';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import api from '../../utils/api';
 
@@ -37,12 +40,13 @@ const TicketDetailPage = () => {
                 content: replyContent,
                 isPrivateNote
             });
+            toast.success(isPrivateNote ? 'Private note added' : 'Reply sent successfully');
             setReplyContent('');
             setIsPrivateNote(false);
             fetchTicket(); // Refresh ticket data
         } catch (error) {
             console.error('Error adding reply:', error);
-            alert('Failed to add reply');
+            toast.error('Failed to add reply');
         } finally {
             setSubmitting(false);
         }
@@ -166,12 +170,19 @@ const TicketDetailPage = () => {
                         <div className="card p-6">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4">Add Reply</h3>
                             <form onSubmit={handleReply}>
-                                <textarea
-                                    className="input min-h-[120px]"
-                                    placeholder="Type your reply here..."
+                                <ReactQuill
                                     value={replyContent}
-                                    onChange={(e) => setReplyContent(e.target.value)}
-                                    required
+                                    onChange={setReplyContent}
+                                    placeholder="Type your reply here..."
+                                    className="bg-white mb-4"
+                                    modules={{
+                                        toolbar: [
+                                            ['bold', 'italic', 'underline'],
+                                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                                            ['link'],
+                                            ['clean']
+                                        ]
+                                    }}
                                 />
                                 <div className="flex items-center justify-between mt-4">
                                     <label className="flex items-center space-x-2">
