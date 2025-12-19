@@ -29,6 +29,13 @@ const seedDatabase = async () => {
             role: 'super_admin'
         });
 
+        const companyAdmin = await User.create({
+            name: 'Company Admin',
+            email: 'companyadmin@workdesks.com',
+            password: 'admin123',
+            role: 'company_admin'
+        });
+
         const manager = await User.create({
             name: 'Team Manager',
             email: 'manager@workdesks.com',
