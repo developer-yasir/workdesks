@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import AgentDashboard from './pages/agent/AgentDashboard';
@@ -55,6 +56,7 @@ const DashboardRedirect = () => {
 function App() {
     return (
         <AuthProvider>
+            <Toaster position="top-right" />
             <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <Routes>
                     {/* Public Routes */}
