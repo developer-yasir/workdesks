@@ -10,6 +10,7 @@ import {
 } from '../controllers/ticketController.js';
 import { protect } from '../middleware/auth.js';
 import { requireRole } from '../middleware/rbac.js';
+import upload from '../middleware/upload.js';
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ router.use(protect);
 // Ticket CRUD
 router.route('/')
     .get(getTickets)
-    .post(createTicket);
+    .post(upload.array('attachments', 5), createTicket); // Allow up to 5 file attachments
 
 router.route('/:id')
     .get(getTicket)
