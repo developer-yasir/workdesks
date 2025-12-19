@@ -43,7 +43,7 @@ export const createTicket = async (req, res) => {
             attachments: attachments.length
         });
 
-        const ticket = await Ticket.create({
+        const ticketData = {
             requester,
             subject,
             description,
@@ -51,7 +51,15 @@ export const createTicket = async (req, res) => {
             priority: priority || 'Medium',
             tags: tags ? (Array.isArray(tags) ? tags : [tags]) : [],
             attachments
-        });
+        };
+
+        // Auto-assign to agent if created by agent
+        if (req.user.role === 'agent') {
+            ticketData.assignedTo = req.user._id;
+            ticketData.teamId = req.user.teamId;
+        }
+
+        const ticket = await Ticket.create(ticketData);
 
         console.log('Ticket created successfully:', ticket._id);
 
@@ -159,12 +167,19 @@ export const getTicket = async (req, res) => {
         // Check access permissions
         const { role, _id, teamId } = req.user;
 
-        if (role === 'agent' && ticket.assignedTo?.toString() !== _id.toString()) {
-            return res.status(403).json({ message: 'Access denied to this ticket' });
+        if (role === 'agent') {
+            // Handle both populated and non-populated assignedTo
+            const assignedToId = ticket.assignedTo?._id || ticket.assignedTo;
+            if (!assignedToId || assignedToId.toString() !== _id.toString()) {
+                return res.status(403).json({ message: 'Access denied to this ticket' });
+            }
         }
 
-        if (role === 'company_manager' && ticket.teamId?.toString() !== teamId?.toString()) {
-            return res.status(403).json({ message: 'Access denied to this ticket' });
+        if (role === 'company_manager') {
+            const ticketTeamId = ticket.teamId?._id || ticket.teamId;
+            if (!ticketTeamId || ticketTeamId.toString() !== teamId?.toString()) {
+                return res.status(403).json({ message: 'Access denied to this ticket' });
+            }
         }
 
         res.json({
