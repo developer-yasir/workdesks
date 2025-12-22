@@ -53,8 +53,27 @@ export const createTicket = async (req, res) => {
             attachments
         };
 
+        // Add companyId from user if available, otherwise use a default
+        if (req.user && req.user.companyId) {
+            ticketData.companyId = req.user.companyId;
+        } else {
+            // For users without companyId, find or create a default company
+            const Company = (await import('../models/Company.js')).default;
+            let defaultCompany = await Company.findOne({ name: 'Default Company' });
+
+            if (!defaultCompany) {
+                defaultCompany = await Company.create({
+                    name: 'Default Company',
+                    slug: 'default-company',
+                    description: 'Default company for tickets without specific company assignment'
+                });
+            }
+
+            ticketData.companyId = defaultCompany._id;
+        }
+
         // Auto-assign to agent if created by agent
-        if (req.user.role === 'agent') {
+        if (req.user && req.user.role === 'agent') {
             ticketData.assignedTo = req.user._id;
             ticketData.teamId = req.user.teamId;
         }
@@ -89,7 +108,7 @@ export const createTicket = async (req, res) => {
 export const getTickets = async (req, res) => {
     try {
         const { role, _id, teamId } = req.user;
-        const { status, priority, type, search, assignedTo, page = 1, limit = 20 } = req.query;
+        const { status, priority, type, source, search, assignedTo, page = 1, limit = 20 } = req.query;
 
         let query = {};
 
@@ -105,10 +124,23 @@ export const getTickets = async (req, res) => {
         }
         // Company admins and super admins see all tickets (no filter)
 
-        // Apply additional filters
-        if (status) query.status = status;
-        if (priority) query.priority = priority;
-        if (type) query.type = type;
+        // Apply additional filters - support comma-separated values for multi-select
+        if (status) {
+            const statusArray = status.split(',').map(s => s.trim());
+            query.status = statusArray.length > 1 ? { $in: statusArray } : statusArray[0];
+        }
+        if (priority) {
+            const priorityArray = priority.split(',').map(p => p.trim());
+            query.priority = priorityArray.length > 1 ? { $in: priorityArray } : priorityArray[0];
+        }
+        if (type) {
+            const typeArray = type.split(',').map(t => t.trim());
+            query.type = typeArray.length > 1 ? { $in: typeArray } : typeArray[0];
+        }
+        if (source) {
+            const sourceArray = source.split(',').map(s => s.trim());
+            query.source = sourceArray.length > 1 ? { $in: sourceArray } : sourceArray[0];
+        }
         if (assignedTo && (role === 'super_admin' || role === 'company_admin' || role === 'company_manager')) {
             query.assignedTo = assignedTo;
         }
@@ -291,6 +323,11 @@ export const addReply = async (req, res) => {
             content,
             isPrivateNote
         });
+
+        // Set first response time if this is the first non-private reply
+        if (!ticket.firstResponseAt && !isPrivateNote && ticket.replies.filter(r => !r.isPrivateNote).length === 1) {
+            ticket.firstResponseAt = new Date();
+        }
 
         await ticket.save();
 

@@ -4,33 +4,55 @@ import DashboardLayout from '../../components/layout/DashboardLayout';
 import CreateTicketModal from '../../components/tickets/CreateTicketModal';
 import TicketFiltersPanel from '../../components/tickets/TicketFiltersPanel';
 import BulkActionBar from '../../components/tickets/BulkActionBar';
+import SLAIndicator from '../../components/tickets/SLAIndicator';
+import ActiveFilters from '../../components/tickets/ActiveFilters';
+import FilterPresets from '../../components/tickets/FilterPresets';
+import SavedFilterViews from '../../components/tickets/SavedFilterViews';
+import TicketPreviewPanel from '../../components/tickets/TicketPreviewPanel';
 import api from '../../utils/api';
+import toast from 'react-hot-toast';
 
 const AgentDashboard = () => {
     const [tickets, setTickets] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [viewMode, setViewMode] = useState('card');
+    const [selectedTickets, setSelectedTickets] = useState([]);
+    const [activePreset, setActivePreset] = useState(null);
+    const [savedViews, setSavedViews] = useState([]);
+    const [previewTicket, setPreviewTicket] = useState(null);
     const [filters, setFilters] = useState({
         search: '',
         resolvedAt: '',
         resolutionDueBy: '',
         firstResponseDueBy: '',
-        status: '',
-        priorities: '',
-        types: '',
-        sources: '',
+        status: [],
+        priorities: [],
+        types: [],
+        sources: [],
         tags: '',
-        companies: '',
-        contacts: '',
-        company: '',
-        country: '',
+        companies: [],
+        contacts: [],
+        company: [],
+        country: [],
         category: ''
     });
 
     useEffect(() => {
         fetchTickets();
     }, [filters]);
+
+    // Load saved views from localStorage on mount
+    useEffect(() => {
+        const saved = localStorage.getItem('ticketFilterViews');
+        if (saved) {
+            try {
+                setSavedViews(JSON.parse(saved));
+            } catch (error) {
+                console.error('Error loading saved views:', error);
+            }
+        }
+    }, []);
 
     // Auto-refresh every 30 seconds
     useEffect(() => {
@@ -45,9 +67,20 @@ const AgentDashboard = () => {
         try {
             setLoading(true);
             const params = {};
-            if (filters.status) params.status = filters.status;
-            if (filters.priorities) params.priority = filters.priorities;
-            if (filters.types) params.type = filters.types;
+
+            // Handle array filters
+            if (filters.status && filters.status.length > 0) {
+                params.status = filters.status.join(',');
+            }
+            if (filters.priorities && filters.priorities.length > 0) {
+                params.priority = filters.priorities.join(',');
+            }
+            if (filters.types && filters.types.length > 0) {
+                params.type = filters.types.join(',');
+            }
+            if (filters.sources && filters.sources.length > 0) {
+                params.source = filters.sources.join(',');
+            }
             if (filters.search) params.search = filters.search;
 
             const response = await api.get('/tickets', { params });
@@ -61,6 +94,72 @@ const AgentDashboard = () => {
 
     const handleFilterChange = (filterName, value) => {
         setFilters(prev => ({ ...prev, [filterName]: value }));
+        setActivePreset(null); // Clear active preset when manually changing filters
+    };
+
+    const handleApplyPreset = (preset) => {
+        // Clear all filters first
+        const clearedFilters = {
+            search: '',
+            resolvedAt: '',
+            resolutionDueBy: '',
+            firstResponseDueBy: '',
+            status: [],
+            priorities: [],
+            types: [],
+            sources: [],
+            tags: '',
+            companies: [],
+            contacts: [],
+            company: [],
+            country: [],
+            category: ''
+        };
+
+        // Apply preset filters
+        const newFilters = { ...clearedFilters, ...preset.filters };
+        setFilters(newFilters);
+        setActivePreset(preset.id);
+    };
+
+    const handleSaveView = (view) => {
+        const updatedViews = [...savedViews, view];
+        setSavedViews(updatedViews);
+        localStorage.setItem('ticketFilterViews', JSON.stringify(updatedViews));
+    };
+
+    const handleApplyView = (view) => {
+        setFilters(view.filters);
+        setActivePreset(null); // Clear preset when applying saved view
+    };
+
+    const handleDeleteView = (viewId) => {
+        const updatedViews = savedViews.filter(v => v.id !== viewId);
+        setSavedViews(updatedViews);
+        localStorage.setItem('ticketFilterViews', JSON.stringify(updatedViews));
+    };
+
+    const handleTicketClick = (ticket, event) => {
+        // Don't open preview if clicking checkbox or link
+        if (event.target.type === 'checkbox' || event.target.closest('a')) {
+            return;
+        }
+        setPreviewTicket(ticket);
+    };
+
+    const handlePreviewUpdate = async (ticketId, updates) => {
+        try {
+            await api.put(`/tickets/${ticketId}`, updates);
+            toast.success('Ticket updated successfully');
+            fetchTickets();
+            // Update preview ticket if it's still open
+            if (previewTicket && previewTicket._id === ticketId) {
+                const response = await api.get(`/tickets/${ticketId}`);
+                setPreviewTicket(response.data.ticket);
+            }
+        } catch (error) {
+            toast.error('Failed to update ticket');
+        }
     };
 
     const handleTicketCreated = (newTicket) => {
@@ -115,20 +214,148 @@ const AgentDashboard = () => {
             resolvedAt: '',
             resolutionDueBy: '',
             firstResponseDueBy: '',
-            status: '',
-            priorities: '',
-            types: '',
-            sources: '',
+            status: [],
+            priorities: [],
+            types: [],
+            sources: [],
             tags: '',
-            companies: '',
-            contacts: '',
-            company: '',
-            country: '',
+            companies: [],
+            contacts: [],
+            company: [],
+            country: [],
             category: ''
         });
     };
 
+    const handleRemoveFilter = (filterType, value) => {
+        setFilters(prev => {
+            if (Array.isArray(prev[filterType])) {
+                return {
+                    ...prev,
+                    [filterType]: prev[filterType].filter(item => item !== value)
+                };
+            } else {
+                return {
+                    ...prev,
+                    [filterType]: ''
+                };
+            }
+        });
+    };
+
     const hasActiveFilters = Object.values(filters).some(v => v !== '');
+
+    // Bulk action handlers
+    const handleTicketSelect = (ticketId) => {
+        setSelectedTickets(prev =>
+            prev.includes(ticketId)
+                ? prev.filter(id => id !== ticketId)
+                : [...prev, ticketId]
+        );
+    };
+
+    const handleSelectAll = () => {
+        if (selectedTickets.length === tickets.length) {
+            setSelectedTickets([]);
+        } else {
+            setSelectedTickets(tickets.map(t => t._id));
+        }
+    };
+
+    const handleBulkAssign = async (assignType) => {
+        try {
+            const response = await api.post('/tickets/bulk-assign', {
+                ticketIds: selectedTickets,
+                assignType
+            });
+            toast.success(response.data.message);
+            setSelectedTickets([]);
+            fetchTickets();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to assign tickets');
+        }
+    };
+
+    const handleBulkStatusChange = async (status) => {
+        try {
+            const response = await api.post('/tickets/bulk-status', {
+                ticketIds: selectedTickets,
+                status
+            });
+            toast.success(response.data.message);
+            setSelectedTickets([]);
+            fetchTickets();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to update status');
+        }
+    };
+
+    const handleBulkPriorityChange = async (priority) => {
+        try {
+            const response = await api.post('/tickets/bulk-priority', {
+                ticketIds: selectedTickets,
+                priority
+            });
+            toast.success(response.data.message);
+            setSelectedTickets([]);
+            fetchTickets();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to update priority');
+        }
+    };
+
+    const handleBulkAddTags = async (tags) => {
+        try {
+            await api.post('/tickets/bulk-tags', {
+                ticketIds: selectedTickets,
+                tags,
+                action: 'add'
+            });
+            toast.success(`Tags added to ${selectedTickets.length} ticket(s)`);
+            setSelectedTickets([]);
+            fetchTickets();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to add tags');
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (!window.confirm(`Are you sure you want to delete ${selectedTickets.length} ticket(s)? This action cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            await api.post('/tickets/bulk-delete', {
+                ticketIds: selectedTickets
+            });
+            toast.success(`${selectedTickets.length} ticket(s) deleted`);
+            setSelectedTickets([]);
+            fetchTickets();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to delete tickets');
+        }
+    };
+
+    const handleBulkArchive = async () => {
+        if (!window.confirm(`Archive ${selectedTickets.length} ticket(s)?`)) {
+            return;
+        }
+
+        try {
+            await api.post('/tickets/bulk-archive', {
+                ticketIds: selectedTickets
+            });
+            toast.success(`${selectedTickets.length} ticket(s) archived`);
+            setSelectedTickets([]);
+            fetchTickets();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to archive tickets');
+        }
+    };
+
+    const handleClearSelection = () => {
+        setSelectedTickets([]);
+    };
 
     return (
         <DashboardLayout>
@@ -158,10 +385,38 @@ const AgentDashboard = () => {
                         </div>
                     </div>
 
+                    {/* Filter Presets */}
+                    <FilterPresets
+                        onApplyPreset={handleApplyPreset}
+                        activePreset={activePreset}
+                    />
+
+                    {/* Saved Filter Views */}
+                    <SavedFilterViews
+                        currentFilters={filters}
+                        onApplyView={handleApplyView}
+                        savedViews={savedViews}
+                        onSaveView={handleSaveView}
+                        onDeleteView={handleDeleteView}
+                    />
+
+                    {/* Active Filters */}
+                    <ActiveFilters
+                        filters={filters}
+                        onRemoveFilter={handleRemoveFilter}
+                        onClearAll={clearFilters}
+                    />
+
                     {/* Controls Bar */}
                     <div className="bg-white border-b border-gray-200 px-6 py-3">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-4">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedTickets.length === tickets.length && tickets.length > 0}
+                                    onChange={handleSelectAll}
+                                    className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary cursor-pointer"
+                                />
                                 <div className="flex items-center space-x-2">
                                     <span className="text-sm text-gray-600">Sort by:</span>
                                     <select className="text-sm border-0 focus:ring-0 text-gray-700 font-medium">
@@ -219,18 +474,35 @@ const AgentDashboard = () => {
                         ) : (
                             <div className="space-y-2">
                                 {tickets.map((ticket, index) => (
-                                    <Link
+                                    <div
                                         key={ticket._id}
-                                        to={`/agent/tickets/${ticket._id}`}
-                                        className="block bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                                        onClick={(e) => handleTicketClick(ticket, e)}
+                                        className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
                                     >
                                         <div className="flex items-start space-x-3">
+                                            {/* Checkbox */}
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedTickets.includes(ticket._id)}
+                                                onChange={(e) => {
+                                                    e.stopPropagation();
+                                                    handleTicketSelect(ticket._id);
+                                                }}
+                                                className="w-4 h-4 mt-1 text-primary border-gray-300 rounded focus:ring-primary cursor-pointer"
+                                            />
+
+                                            {/* Avatar */}
                                             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getAvatarColor(index)} flex-shrink-0`}>
                                                 <span className="text-sm font-semibold text-gray-700">
                                                     {getInitials(ticket.requester)}
                                                 </span>
                                             </div>
-                                            <div className="flex-1 min-w-0">
+
+                                            {/* Ticket Content - Clickable */}
+                                            <Link
+                                                to={`/agent/tickets/${ticket._id}`}
+                                                className="flex-1 min-w-0"
+                                            >
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex-1">
                                                         <div className="flex items-center space-x-2 mb-1">
@@ -247,8 +519,12 @@ const AgentDashboard = () => {
                                                             </div>
                                                             <span>·</span>
                                                             <span>Created: {getRelativeTime(ticket.createdAt)}</span>
-                                                            <span>·</span>
-                                                            <span>First response due in: 2 days</span>
+                                                            {ticket.resolutionDue && (
+                                                                <>
+                                                                    <span>·</span>
+                                                                    <SLAIndicator dueDate={ticket.resolutionDue} label="Resolution" />
+                                                                </>
+                                                            )}
                                                         </div>
                                                     </div>
                                                     <div className="ml-4">
@@ -265,9 +541,9 @@ const AgentDashboard = () => {
                                                         <span>Social Support.../{ticket.assignedTo?.name || 'Unassigned'}</span>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            </Link>
                                         </div>
-                                    </Link>
+                                    </div>
                                 ))}
                             </div>
                         )}
@@ -283,12 +559,33 @@ const AgentDashboard = () => {
                 />
             </div>
 
+            {/* Bulk Action Bar */}
+            <BulkActionBar
+                selectedCount={selectedTickets.length}
+                onAssign={handleBulkAssign}
+                onChangeStatus={handleBulkStatusChange}
+                onChangePriority={handleBulkPriorityChange}
+                onAddTags={handleBulkAddTags}
+                onDelete={handleBulkDelete}
+                onArchive={handleBulkArchive}
+                onClear={handleClearSelection}
+            />
+
             {/* Create Ticket Modal */}
             <CreateTicketModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onTicketCreated={handleTicketCreated}
             />
+
+            {/* Ticket Preview Panel */}
+            {previewTicket && (
+                <TicketPreviewPanel
+                    ticket={previewTicket}
+                    onClose={() => setPreviewTicket(null)}
+                    onUpdate={handlePreviewUpdate}
+                />
+            )}
         </DashboardLayout>
     );
 };

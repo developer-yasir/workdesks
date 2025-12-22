@@ -24,8 +24,14 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "express-validator": "^7.3.1",
+    "handlebars": "^4.7.8",
+    "html-to-text": "^9.0.5",
+    "imap": "^0.8.19",
     "jsonwebtoken": "^9.0.3",
+    "mailparser": "^3.9.1",
     "mongoose": "^9.0.2",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "nodemailer": "^7.0.12",
+    "slugify": "^1.6.6"
   }
 }

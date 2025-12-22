@@ -7,7 +7,16 @@ import TicketDetailPage from './pages/agent/TicketDetailPage';
 import ManagerDashboard from './pages/manager/ManagerDashboard';
 import CompanyAdminDashboard from './pages/company-admin/CompanyAdminDashboard';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AnalyticsDashboard from './pages/admin/AnalyticsDashboard';
+import CompanyManagement from './pages/admin/CompanyManagement';
 import UsersPage from './pages/admin/UsersPage';
+import AdminTickets from './pages/admin/AdminTickets';
+import TeamsPage from './pages/admin/TeamsPage';
+import SettingsPage from './pages/admin/SettingsPage';
+import CustomerRegister from './pages/customer/CustomerRegister';
+import CustomerLogin from './pages/customer/CustomerLogin';
+import CustomerDashboard from './pages/customer/CustomerDashboard';
+import CustomerCreateTicket from './pages/customer/CustomerCreateTicket';
 import './index.css';
 
 // Protected Route Component
@@ -28,6 +37,17 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
     if (allowedRoles && !allowedRoles.includes(user.role)) {
         return <Navigate to="/unauthorized" replace />;
+    }
+
+    return children;
+};
+
+// Customer Protected Route
+const CustomerProtectedRoute = ({ children }) => {
+    const token = localStorage.getItem('customerToken');
+
+    if (!token) {
+        return <Navigate to="/customer/login" replace />;
     }
 
     return children;
@@ -61,6 +81,28 @@ function App() {
                 <Routes>
                     {/* Public Routes */}
                     <Route path="/login" element={<Login />} />
+
+                    {/* Customer Public Routes */}
+                    <Route path="/customer/register" element={<CustomerRegister />} />
+                    <Route path="/customer/login" element={<CustomerLogin />} />
+
+                    {/* Customer Protected Routes */}
+                    <Route
+                        path="/customer/dashboard"
+                        element={
+                            <CustomerProtectedRoute>
+                                <CustomerDashboard />
+                            </CustomerProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/customer/tickets/new"
+                        element={
+                            <CustomerProtectedRoute>
+                                <CustomerCreateTicket />
+                            </CustomerProtectedRoute>
+                        }
+                    />
 
                     {/* Dashboard Redirect */}
                     <Route path="/" element={<DashboardRedirect />} />
@@ -104,10 +146,50 @@ function App() {
                         }
                     />
                     <Route
+                        path="/admin/tickets"
+                        element={
+                            <ProtectedRoute allowedRoles={['super_admin', 'company_admin', 'company_manager']}>
+                                <AdminTickets />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
                         path="/admin/users"
                         element={
                             <ProtectedRoute allowedRoles={['super_admin']}>
                                 <UsersPage />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/analytics"
+                        element={
+                            <ProtectedRoute allowedRoles={['super_admin', 'company_admin', 'company_manager']}>
+                                <AnalyticsDashboard />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/companies"
+                        element={
+                            <ProtectedRoute allowedRoles={['super_admin']}>
+                                <CompanyManagement />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/teams"
+                        element={
+                            <ProtectedRoute allowedRoles={['super_admin']}>
+                                <TeamsPage />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/settings"
+                        element={
+                            <ProtectedRoute allowedRoles={['super_admin']}>
+                                <SettingsPage />
                             </ProtectedRoute>
                         }
                     />

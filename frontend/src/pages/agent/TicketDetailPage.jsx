@@ -201,6 +201,51 @@ const TicketDetailPage = () => {
                                     <div className="prose max-w-none">
                                         <div dangerouslySetInnerHTML={{ __html: ticket.description }} />
                                     </div>
+
+                                    {/* Attachments */}
+                                    {ticket.attachments && ticket.attachments.length > 0 && (
+                                        <div className="mt-6 pt-4 border-t border-gray-200">
+                                            <h4 className="text-sm font-semibold text-gray-900 mb-3">
+                                                📎 Attachments ({ticket.attachments.length})
+                                            </h4>
+                                            <div className="space-y-2">
+                                                {ticket.attachments.map((attachment, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                                                    >
+                                                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                                            <div className="flex-shrink-0">
+                                                                {attachment.mimetype?.startsWith('image/') ? (
+                                                                    <span className="text-2xl">🖼️</span>
+                                                                ) : attachment.mimetype?.includes('pdf') ? (
+                                                                    <span className="text-2xl">📄</span>
+                                                                ) : (
+                                                                    <span className="text-2xl">📎</span>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm font-medium text-gray-900 truncate">
+                                                                    {attachment.originalName || attachment.filename}
+                                                                </p>
+                                                                <p className="text-xs text-gray-500">
+                                                                    {attachment.size ? `${(attachment.size / 1024).toFixed(2)} KB` : 'Unknown size'}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <a
+                                                            href={`http://localhost:5000/${attachment.path.replace(/\\/g, '/')}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="flex-shrink-0 px-3 py-1.5 text-xs font-medium text-primary hover:text-primary-dark border border-primary rounded hover:bg-blue-50 transition-colors"
+                                                        >
+                                                            Download
+                                                        </a>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

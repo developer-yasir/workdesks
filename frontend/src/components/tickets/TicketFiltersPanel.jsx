@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import MultiSelectFilter from '../common/MultiSelectFilter';
 
 const TicketFiltersPanel = ({ filters, onFilterChange, onApply, onClear }) => {
     const [localFilters, setLocalFilters] = useState(filters);
@@ -47,7 +48,7 @@ const TicketFiltersPanel = ({ filters, onFilterChange, onApply, onClear }) => {
                             onClick={handleClear}
                             className="text-xs text-primary hover:text-blue-700"
                         >
-                            Show applied filters
+                            Clear all
                         </button>
                     )}
                 </div>
@@ -120,78 +121,41 @@ const TicketFiltersPanel = ({ filters, onFilterChange, onApply, onClear }) => {
                     </select>
                 </div>
 
-                {/* Status Include */}
-                <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                        Status <span className="text-gray-500">Include</span>
-                    </label>
-                    <select
-                        className="w-full px-3 py-2 text-sm text-gray-500 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
-                        value={localFilters.status}
-                        onChange={(e) => handleChange('status', e.target.value)}
-                    >
-                        <option value="">Any</option>
-                        <option value="Open">Open</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Resolved">Resolved</option>
-                        <option value="Closed">Closed</option>
-                    </select>
-                </div>
+                {/* Status - Multi-Select */}
+                <MultiSelectFilter
+                    label="Status"
+                    options={['Open', 'Pending', 'Resolved', 'Closed']}
+                    selected={localFilters.status || []}
+                    onChange={(value) => handleChange('status', value)}
+                    placeholder="Any"
+                />
 
-                {/* Priorities Include */}
-                <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                        Priorities <span className="text-gray-500">Include</span>
-                    </label>
-                    <select
-                        className="w-full px-3 py-2 text-sm text-gray-500 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
-                        value={localFilters.priorities}
-                        onChange={(e) => handleChange('priorities', e.target.value)}
-                    >
-                        <option value="">Any</option>
-                        <option value="Low">Low</option>
-                        <option value="Medium">Medium</option>
-                        <option value="High">High</option>
-                        <option value="Urgent">Urgent</option>
-                    </select>
-                </div>
+                {/* Priorities - Multi-Select */}
+                <MultiSelectFilter
+                    label="Priorities"
+                    options={['Low', 'Medium', 'High', 'Urgent']}
+                    selected={localFilters.priorities || []}
+                    onChange={(value) => handleChange('priorities', value)}
+                    placeholder="Any"
+                />
 
-                {/* Types Include */}
-                <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                        Types <span className="text-gray-500">Include</span>
-                    </label>
-                    <select
-                        className="w-full px-3 py-2 text-sm text-gray-500 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
-                        value={localFilters.types}
-                        onChange={(e) => handleChange('types', e.target.value)}
-                    >
-                        <option value="">Any</option>
-                        <option value="Question">Question</option>
-                        <option value="Incident">Incident</option>
-                        <option value="Problem">Problem</option>
-                        <option value="Feature Request">Feature Request</option>
-                    </select>
-                </div>
+                {/* Types - Multi-Select */}
+                <MultiSelectFilter
+                    label="Types"
+                    options={['Question', 'Incident', 'Problem', 'Feature Request']}
+                    selected={localFilters.types || []}
+                    onChange={(value) => handleChange('types', value)}
+                    placeholder="Any"
+                />
 
-                {/* Sources Include */}
-                <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1.5">
-                        Sources <span className="text-gray-500">Include</span>
-                    </label>
-                    <select
-                        className="w-full px-3 py-2 text-sm text-gray-500 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
-                        value={localFilters.sources}
-                        onChange={(e) => handleChange('sources', e.target.value)}
-                    >
-                        <option value="">Any</option>
-                        <option value="Email">Email</option>
-                        <option value="Portal">Portal</option>
-                        <option value="Phone">Phone</option>
-                        <option value="Chat">Chat</option>
-                        <option value="Feedback Widget">Feedback Widget</option>
-                    </select>
-                </div>
+                {/* Sources - Multi-Select */}
+                <MultiSelectFilter
+                    label="Sources"
+                    options={['Email', 'Portal', 'Phone', 'Chat', 'Feedback Widget']}
+                    selected={localFilters.sources || []}
+                    onChange={(value) => handleChange('sources', value)}
+                    placeholder="Any"
+                />
 
                 {/* Tags */}
                 <div>
@@ -214,7 +178,7 @@ const TicketFiltersPanel = ({ filters, onFilterChange, onApply, onClear }) => {
                     </label>
                     <select
                         className="w-full px-3 py-2 text-sm text-gray-500 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
-                        value={localFilters.companies}
+                        value={Array.isArray(localFilters.companies) ? '' : localFilters.companies}
                         onChange={(e) => handleChange('companies', e.target.value)}
                     >
                         <option value="">Any</option>
@@ -228,7 +192,7 @@ const TicketFiltersPanel = ({ filters, onFilterChange, onApply, onClear }) => {
                     </label>
                     <select
                         className="w-full px-3 py-2 text-sm text-gray-500 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
-                        value={localFilters.contacts}
+                        value={Array.isArray(localFilters.contacts) ? '' : localFilters.contacts}
                         onChange={(e) => handleChange('contacts', e.target.value)}
                     >
                         <option value="">Any</option>
@@ -242,7 +206,7 @@ const TicketFiltersPanel = ({ filters, onFilterChange, onApply, onClear }) => {
                     </label>
                     <select
                         className="w-full px-3 py-2 text-sm text-gray-500 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
-                        value={localFilters.company}
+                        value={Array.isArray(localFilters.company) ? '' : localFilters.company}
                         onChange={(e) => handleChange('company', e.target.value)}
                     >
                         <option value="">Any</option>
@@ -256,7 +220,7 @@ const TicketFiltersPanel = ({ filters, onFilterChange, onApply, onClear }) => {
                     </label>
                     <select
                         className="w-full px-3 py-2 text-sm text-gray-500 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-transparent"
-                        value={localFilters.country}
+                        value={Array.isArray(localFilters.country) ? '' : localFilters.country}
                         onChange={(e) => handleChange('country', e.target.value)}
                     >
                         <option value="">Any</option>
