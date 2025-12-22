@@ -14,15 +14,18 @@ const Sidebar = () => {
                 return [
                     { path: '/admin/dashboard', label: 'Dashboard', icon: '📊' },
                     { path: '/admin/tickets', label: 'All Tickets', icon: '🎫' },
+                    { path: '/admin/companies', label: 'Companies', icon: '🏢' },
                     { path: '/admin/users', label: 'Users', icon: '👥' },
-                    { path: '/admin/teams', label: 'Teams', icon: '🏢' },
+                    { path: '/admin/teams', label: 'Teams', icon: '👥' },
+                    { path: '/admin/analytics', label: 'Analytics', icon: '📈' },
                     { path: '/admin/settings', label: 'Settings', icon: '⚙️' }
                 ];
             case 'company_manager':
                 return [
                     { path: '/manager/dashboard', label: 'Dashboard', icon: '📊' },
                     { path: '/manager/tickets', label: 'Team Tickets', icon: '🎫' },
-                    { path: '/manager/reports', label: 'Reports', icon: '📈' },
+                    { path: '/admin/analytics', label: 'Analytics', icon: '📈' },
+                    { path: '/manager/reports', label: 'Reports', icon: '📋' },
                     { path: '/manager/team', label: 'Team Settings', icon: '👥' }
                 ];
             case 'agent':
@@ -57,8 +60,8 @@ const Sidebar = () => {
                             <Link
                                 to={item.path}
                                 className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${isActive(item.path)
-                                        ? 'bg-primary text-white'
-                                        : 'text-gray-700 hover:bg-gray-100'
+                                    ? 'bg-primary text-white'
+                                    : 'text-gray-700 hover:bg-gray-100'
                                     }`}
                             >
                                 <span className="text-xl">{item.icon}</span>

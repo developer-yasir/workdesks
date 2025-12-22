@@ -31,6 +31,11 @@ const userSchema = new mongoose.Schema({
         ref: 'Team',
         default: null
     },
+    companyId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Company',
+        required: [true, 'User must belong to a company']
+    },
     isActive: {
         type: Boolean,
         default: true

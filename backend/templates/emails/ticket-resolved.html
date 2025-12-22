@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket Resolved</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #f3f4f6;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #ffffff; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <tr>
+                        <td style="padding: 40px 40px 30px; background: linear-gradient(135deg, #10B981 0%, #059669 100%);">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">{{companyName}}</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h2 style="margin: 0 0 20px; color: #1F2937; font-size: 24px;">Ticket Resolved ✅</h2>
+                            <p style="margin: 0 0 20px; color: #4B5563; font-size: 16px; line-height: 1.6;">
+                                Hi <strong>{{customerName}}</strong>,
+                            </p>
+                            <p style="margin: 0 0 30px; color: #4B5563; font-size: 16px; line-height: 1.6;">
+                                Great news! Your ticket <strong>{{ticketNumber}}</strong> has been resolved.
+                            </p>
+                            <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #ECFDF5; border-radius: 8px; margin-bottom: 30px; border: 2px solid #10B981;">
+                                <tr>
+                                    <td style="padding: 20px; text-align: center;">
+                                        <p style="margin: 0 0 10px; color: #065F46; font-size: 18px; font-weight: bold;">Issue Resolved!</p>
+                                        <p style="margin: 0; color: #047857; font-size: 14px;">{{subject}}</p>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="margin: 0 0 30px; color: #4B5563; font-size: 16px; line-height: 1.6;">
+                                If you're satisfied with the resolution, you can close this ticket. If you need further assistance, feel free to reopen it or create a new ticket.
+                            </p>
+                            <table role="presentation" style="margin: 0 0 30px;">
+                                <tr>
+                                    <td>
+                                        <a href="{{ticketUrl}}" style="display: inline-block; padding: 14px 32px; background-color: #10B981; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 8px;">
+                                            View Ticket
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="margin: 0; color: #6B7280; font-size: 14px; line-height: 1.6;">
+                                Thank you for using our support service!
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 30px 40px; background-color: #F9FAFB; border-top: 1px solid #E5E7EB;">
+                            <p style="margin: 0; color: #9CA3AF; font-size: 12px; text-align: center;">
+                                © 2025 {{companyName}}. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

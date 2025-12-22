@@ -8,6 +8,7 @@ import {
     addReply,
     deleteTicket
 } from '../controllers/ticketController.js';
+import { bulkAssign, bulkStatusChange, bulkPriorityChange, bulkDelete, bulkTags, bulkArchive } from '../controllers/bulkTicketController.js';
 import { protect } from '../middleware/auth.js';
 import { requireRole } from '../middleware/rbac.js';
 import upload from '../middleware/upload.js';
@@ -30,5 +31,13 @@ router.route('/:id')
 // Ticket actions
 router.post('/:id/assign', requireRole(['super_admin', 'company_admin', 'company_manager']), assignTicket);
 router.post('/:id/reply', addReply);
+
+// Bulk operations
+router.post('/bulk-assign', bulkAssign);
+router.post('/bulk-status', bulkStatusChange);
+router.post('/bulk-priority', bulkPriorityChange);
+router.post('/bulk-tags', bulkTags);
+router.post('/bulk-archive', bulkArchive);
+router.post('/bulk-delete', requireRole(['super_admin', 'company_admin', 'company_manager']), bulkDelete);
 
 export default router;
